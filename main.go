@@ -30,20 +30,20 @@ func deserialzeJSON(filepath string) (Receipt, error) {
 	// Open JSON file
 	file, err := os.Open(filepath)
 	if err != nil {
-		return receipt, fmt.Errorf("unable to open file: %v", err)
+		return receipt, fmt.Errorf("unable to open file: %v\n", err)
 	}
 	defer file.Close()
 
 	// Read file content
 	bytes, err := io.ReadAll(file)
 	if err != nil {
-		return receipt, fmt.Errorf("unable to open file: %v", err)
+		return receipt, fmt.Errorf("unable to open file: %v\n", err)
 	}
 
 	// Deserialize struct
 	err = json.Unmarshal(bytes, &receipt)
 	if err != nil {
-		return receipt, fmt.Errorf("unable to deserialize JSON: %v", err)
+		return receipt, fmt.Errorf("unable to deserialize JSON: %v\n", err)
 	}
 
 	return receipt, nil
@@ -57,7 +57,7 @@ func pointsFromTotal(receipt Receipt) (int, error) {
 	total, err := strconv.ParseFloat(receipt.Total, 64)
 
 	if err != nil {
-		return 0, fmt.Errorf("Error converting total to float: %v", err)
+		return 0, fmt.Errorf("Error converting total to float: %v\n", err)
 	}
 
 	// Adds 50 points if total is round dollar amount
@@ -74,19 +74,43 @@ func pointsFromTotal(receipt Receipt) (int, error) {
 }
 
 // Calculates points from length of description
-func pointsFromDescription(receipt Receipt) int {
+func pointsFromDescription(receipt Receipt) (int, error) {
 	score := 0
 
 	// Add price * 0.2 if trimmed length of item description % 3 == 0
 	for _, item := range receipt.Items {
 		trimmed := strings.TrimSpace(item.ShortDescription)
 		if len(trimmed)%3 == 0 {
-			price, _ := strconv.ParseFloat(item.Price, 64)
+			price, err := strconv.ParseFloat(item.Price, 64)
+
+			if err != nil {
+				return 0, fmt.Errorf("Error converting price to float: %v\n", err)
+			}
+
 			score += int(math.Ceil(price * 0.2))
 		}
 	}
 
-	return score
+	return score, nil
+}
+
+// Calculates points based on day
+func pointsFromDay(receipt Receipt) (int, error) {
+	score := 0
+
+	// Add 6 points if day in purchase date is odd
+	dayString := strings.Split(receipt.PurchaseDate, "-")[2]
+	day, err := strconv.ParseInt(dayString, 10, 8)
+
+	if err != nil {
+		return 0, fmt.Errorf("unable to convert day to int: %v\n", err)
+	}
+
+	if day%2 == 1 {
+		score += 6
+	}
+
+	return score, nil
 }
 
 // Calculates the score associated with a given receipt
@@ -99,28 +123,25 @@ func calculateScore(receipt Receipt) (int, error) {
 			score += 1
 		}
 	}
+	fmt.Printf("Score after retailer name: %v\n", score)
 
 	// Add points from total
 	points, _ := pointsFromTotal(receipt)
 	score += points
+	fmt.Printf("Score after points from total: %v\n", score)
 
 	// Add 5 points for every two items on receipt
-	score += 5 * len(receipt.Items) / 2
+	score += 5 * (len(receipt.Items) / 2)
+	fmt.Printf("Score after receipt items: %v\n", score)
 
 	// Add score from descriptions
-	score += pointsFromDescription(receipt)
+	points, _ = pointsFromDescription(receipt)
+	score += points
+	fmt.Printf("Score after description: %v\n", score)
 
-	// Add 6 points if day in purchase date is odd
-	dayString := strings.Split(receipt.PurchaseDate, "-")[2]
-	day, err := strconv.ParseInt(dayString, 10, 8)
-
-	if err != nil {
-		return 0, fmt.Errorf("unable to convert day to int: %v", err)
-	}
-
-	if day%2 == 1 {
-		score += 6
-	}
+	points, _ = pointsFromDay(receipt)
+	score += points
+	fmt.Printf("Score after date: %v\n", score)
 
 	// Add 10 points if time of purchase is after 2pm and before 4pm
 	time := strings.Split(receipt.PurchaseTime, ":")
@@ -128,6 +149,7 @@ func calculateScore(receipt Receipt) (int, error) {
 	if time[0] == "14" && time[1] != "00" || time[0] == "15" {
 		score += 10
 	}
+	fmt.Printf("Score after time: %v\n", score)
 
 	return score, nil
 }
@@ -136,14 +158,14 @@ func main() {
 	receipt, err := deserialzeJSON("examples/target-receipt.json")
 
 	if err != nil {
-		fmt.Errorf("Error deserializing JSON: %v", err)
+		fmt.Errorf("Error deserializing JSON: %v\n", err)
 	}
 
 	score, err := calculateScore(receipt)
 
 	if err != nil {
-		fmt.Errorf("Unable to calculate score: %v", err)
+		fmt.Errorf("Unable to calculate score: %v\n", err)
 	}
 
-	fmt.Printf("Total score: %v", score)
+	fmt.Printf("Total score: %v\n", score)
 }
