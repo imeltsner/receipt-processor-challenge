@@ -18,6 +18,6 @@ type ID struct {
 	ID string `json:"id"`
 }
 
-type Score struct {
+type Points struct {
 	Points int `json:"points"`
 }
