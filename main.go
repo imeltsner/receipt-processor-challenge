@@ -2,48 +2,28 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
-	"io"
-	"os"
+	"log"
+	"net/http"
+
+	"github.com/google/uuid"
+	"github.com/gorilla/mux"
 )
 
-func deserialzeJSON(filepath string) (Receipt, error) {
-	var receipt Receipt
+// Generates an ID for a receipt and returns the ID
+func ProcessReceiptHandler(w http.ResponseWriter, r *http.Request) {
+	id := uuid.New().String()
 
-	// Open JSON file
-	file, err := os.Open(filepath)
-	if err != nil {
-		return receipt, fmt.Errorf("unable to open file: %v", err)
-	}
-	defer file.Close()
-
-	// Read file content
-	bytes, err := io.ReadAll(file)
-	if err != nil {
-		return receipt, fmt.Errorf("unable to open file: %v", err)
+	response := ID{
+		ID: id,
 	}
 
-	// Deserialize struct
-	err = json.Unmarshal(bytes, &receipt)
-	if err != nil {
-		return receipt, fmt.Errorf("unable to deserialize JSON: %v", err)
-	}
-
-	return receipt, nil
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(response)
 }
 
 func main() {
-	receipt, err := deserialzeJSON("mocks/market-receipt.json")
+	router := mux.NewRouter()
 
-	if err != nil {
-		fmt.Errorf("error deserializing JSON: %v", err)
-	}
-
-	score, err := calculateScore(receipt)
-
-	if err != nil {
-		fmt.Errorf("unable to calculate score: %v", err)
-	}
-
-	fmt.Printf("Total score: %v", score)
+	router.HandleFunc("/receipts/process", ProcessReceiptHandler).Methods(http.MethodPost)
+	log.Fatal(http.ListenAndServe(":8080", router))
 }
