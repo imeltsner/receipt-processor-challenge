@@ -73,8 +73,8 @@ func pointsFromDay(receipt Receipt) (int, error) {
 	return score, nil
 }
 
-// Calculates the score associated with a given receipt
-func calculateScore(receipt Receipt) (int, error) {
+// Calculates the total points associated with a given receipt
+func calculatePoints(receipt Receipt) (int, error) {
 	score := 0
 
 	// Adds 1 point for each alphanumeric characters of retailer
@@ -85,7 +85,10 @@ func calculateScore(receipt Receipt) (int, error) {
 	}
 
 	// Add points from total
-	points, _ := pointsFromTotal(receipt)
+	points, err := pointsFromTotal(receipt)
+	if err != nil {
+		return 0, err
+	}
 	score += points
 
 	// Add 5 points for every two items on receipt
@@ -96,12 +99,14 @@ func calculateScore(receipt Receipt) (int, error) {
 	score += points
 
 	// Add points from day value
-	points, _ = pointsFromDay(receipt)
+	points, err = pointsFromDay(receipt)
+	if err != nil {
+		return 0, err
+	}
 	score += points
 
 	// Add 10 points if time of purchase is after 2pm and before 4pm
 	time := strings.Split(receipt.PurchaseTime, ":")
-
 	if time[0] == "14" && time[1] != "00" || time[0] == "15" {
 		score += 10
 	}
