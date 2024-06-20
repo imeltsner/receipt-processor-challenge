@@ -12,3 +12,7 @@ type Receipt struct {
 	Items        []Item `json:"items"`
 	Total        string `json:"total"`
 }
+
+type ID struct {
+	ID string `json:"id"`
+}
