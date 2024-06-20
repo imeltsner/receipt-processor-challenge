@@ -16,7 +16,7 @@ func ProcessReceiptHandler(w http.ResponseWriter, r *http.Request) {
 	// Generate ID
 	id := uuid.New().String()
 
-	// Save receipt with new ID
+	// Save receipt to local map
 	var receipt Receipt
 	err := json.NewDecoder(r.Body).Decode(&receipt)
 
