@@ -94,11 +94,11 @@ func pointsFromDescription(receipt Receipt) (int, error) {
 	return score, nil
 }
 
-// Calculates points based on day
+// Calculates points based on if day is odd
 func pointsFromDay(receipt Receipt) (int, error) {
 	score := 0
 
-	// Add 6 points if day in purchase date is odd
+	// Parse date string for day
 	dayString := strings.Split(receipt.PurchaseDate, "-")[2]
 	day, err := strconv.ParseInt(dayString, 10, 8)
 
@@ -106,6 +106,7 @@ func pointsFromDay(receipt Receipt) (int, error) {
 		return 0, fmt.Errorf("unable to convert day to int: %v\n", err)
 	}
 
+	// Add 6 points if day in purchase date is odd
 	if day%2 == 1 {
 		score += 6
 	}
@@ -123,25 +124,21 @@ func calculateScore(receipt Receipt) (int, error) {
 			score += 1
 		}
 	}
-	fmt.Printf("Score after retailer name: %v\n", score)
 
 	// Add points from total
 	points, _ := pointsFromTotal(receipt)
 	score += points
-	fmt.Printf("Score after points from total: %v\n", score)
 
 	// Add 5 points for every two items on receipt
 	score += 5 * (len(receipt.Items) / 2)
-	fmt.Printf("Score after receipt items: %v\n", score)
 
-	// Add score from descriptions
+	// Add points from description length
 	points, _ = pointsFromDescription(receipt)
 	score += points
-	fmt.Printf("Score after description: %v\n", score)
 
+	// Add points from day value
 	points, _ = pointsFromDay(receipt)
 	score += points
-	fmt.Printf("Score after date: %v\n", score)
 
 	// Add 10 points if time of purchase is after 2pm and before 4pm
 	time := strings.Split(receipt.PurchaseTime, ":")
@@ -149,13 +146,12 @@ func calculateScore(receipt Receipt) (int, error) {
 	if time[0] == "14" && time[1] != "00" || time[0] == "15" {
 		score += 10
 	}
-	fmt.Printf("Score after time: %v\n", score)
 
 	return score, nil
 }
 
 func main() {
-	receipt, err := deserialzeJSON("examples/target-receipt.json")
+	receipt, err := deserialzeJSON("examples/market-receipt.json")
 
 	if err != nil {
 		fmt.Errorf("Error deserializing JSON: %v\n", err)
