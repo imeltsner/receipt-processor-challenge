@@ -18,7 +18,7 @@ cd receipt-processor-challenge
 go run *.go
 ```
 4. While the program is running, use your preferred method to test the API endpoints.
-I used Postman to send a POST request to http://localhost:8080/receipts/process. The request contained a JSON file from the mocks folder. I then took the resulting ID and sent a GET request to http://localhost:8080/receipts/{id}/points. The program will output a score associated with the receipt
+I used Postman to send a POST request to http://localhost:8080/receipts/process. The request contained a JSON file from the mocks folder. I then took the resulting ID and sent a GET request to http://localhost:8080/receipts/{id}/points. The program will output the total points earned by receipt
 
 ## About
 
