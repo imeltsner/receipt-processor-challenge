@@ -1,5 +1,27 @@
 # Receipt Processor
 
+## Usage
+This project assumes you have the go programming langauge installed
+
+1. Clone the repository
+```
+git clone git@github.com:imeltsner/receipt-processor-challenge.git
+```
+
+2. Go to the directory containing the project
+```
+cd receipt-processor-challenge
+```
+
+3. Run the program. It will start on port 8080
+```
+go run *.go
+```
+4. While the program is running, use your preferred method to test the API endpoints.
+I used Postman to send a POST request to http://localhost:8080/receipts/process. The request contained a JSON file from the mocks folder. I then took the resulting ID and sent a GET request to http://localhost:8080/receipts/{id}/points. The program will output a score associated with the receipt
+
+## About
+
 Build a webservice that fulfils the documented API. The API is described below. A formal definition is provided 
 in the [api.yml](./api.yml) file, but the information in this README is sufficient for completion of this challenge. We will use the 
 described API to test your solution.
