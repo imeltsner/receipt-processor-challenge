@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/go-playground/validator/v10"
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 )
@@ -16,22 +17,29 @@ func ProcessReceiptHandler(w http.ResponseWriter, r *http.Request) {
 	// Generate ID
 	id := uuid.New().String()
 
-	// Save receipt to local map
+	// Decode JSON
 	var receipt Receipt
 	err := json.NewDecoder(r.Body).Decode(&receipt)
-
 	if err != nil {
 		http.Error(w, "The receipt is invalid", http.StatusBadRequest)
 		return
 	}
 
+	// Validate all fields present
+	validate := validator.New()
+	err = validate.Struct(receipt)
+	if err != nil {
+		http.Error(w, "The receipt is invalid", http.StatusBadRequest)
+		return
+	}
+
+	// Save new receipt to local memory
 	receipts[id] = receipt
 
 	// Send response
 	response := ID{
 		ID: id,
 	}
-
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(response)
 }
