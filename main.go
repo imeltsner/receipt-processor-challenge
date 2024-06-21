@@ -59,6 +59,6 @@ func main() {
 	router := mux.NewRouter()
 
 	router.HandleFunc("/receipts/process", ProcessReceiptHandler).Methods(http.MethodPost)
-	router.HandleFunc("/receipts/{id}/points", CalculatePointsHandler)
+	router.HandleFunc("/receipts/{id}/points", CalculatePointsHandler).Methods(http.MethodGet)
 	log.Fatal(http.ListenAndServe(":8080", router))
 }
