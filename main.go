@@ -12,11 +12,20 @@ import (
 
 var receipts = map[string]Receipt{}
 
+// Generates a deterministic ID for a receipt
+func generateReceiptID(receipt Receipt) string {
+	// Create unique string from receipt details and init namespace
+	uniqueString := receipt.Retailer + receipt.PurchaseDate + receipt.Total
+	namespace := uuid.UUID{}
+
+	// Generate uuid based on unique string
+	uuid := uuid.NewSHA1(namespace, []byte(uniqueString))
+
+	return uuid.String()
+}
+
 // Generates an ID for a receipt and returns the ID
 func ProcessReceiptHandler(w http.ResponseWriter, r *http.Request) {
-	// Generate ID
-	id := uuid.New().String()
-
 	// Decode JSON
 	var receipt Receipt
 	err := json.NewDecoder(r.Body).Decode(&receipt)
@@ -33,7 +42,9 @@ func ProcessReceiptHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Save new receipt to local memory
+	// Generate ID and save new receipt to local memory
+	id := generateReceiptID(receipt)
+
 	receipts[id] = receipt
 
 	// Send response
@@ -65,7 +76,6 @@ func CalculatePointsHandler(w http.ResponseWriter, r *http.Request) {
 
 func main() {
 	router := mux.NewRouter()
-
 	router.HandleFunc("/receipts/process", ProcessReceiptHandler).Methods(http.MethodPost)
 	router.HandleFunc("/receipts/{id}/points", CalculatePointsHandler).Methods(http.MethodGet)
 	log.Fatal(http.ListenAndServe(":8080", router))
