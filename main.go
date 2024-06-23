@@ -44,7 +44,10 @@ func ProcessReceiptHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Generate ID and save new receipt to local memory
 	id := generateReceiptID(receipt)
-
+	if _, ok := receipts[id]; ok {
+		http.Error(w, "The receipt has already been scanned", http.StatusBadRequest)
+		return
+	}
 	receipts[id] = receipt
 
 	// Send response
