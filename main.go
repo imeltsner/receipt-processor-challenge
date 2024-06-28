@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"strconv"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/google/uuid"
@@ -77,9 +78,45 @@ func CalculatePointsHandler(w http.ResponseWriter, r *http.Request) {
 	http.Error(w, "No receipt found for that id", http.StatusNotFound)
 }
 
+// Add new items to receipt
+func AddItemsHandler(w http.ResponseWriter, r *http.Request) {
+	params := mux.Vars(r)
+
+	if receipt, ok := receipts[params["id"]]; ok {
+		// Decode new items
+		var newItems Receipt
+		json.NewDecoder(r.Body).Decode(&newItems)
+
+		// Add new items to receipt and update total price
+		total, err := strconv.ParseFloat(receipt.Total, 64)
+		if err != nil {
+			http.Error(w, "unable to parse price", http.StatusBadRequest)
+			return
+		}
+
+		for _, item := range newItems.Items {
+			receipt.Items = append(receipt.Items, item)
+			price, err := strconv.ParseFloat(item.Price, 64)
+			if err != nil {
+				http.Error(w, "unable to parse price", http.StatusBadRequest)
+				return
+			}
+			total += price
+		}
+
+		receipt.Total = strconv.FormatFloat(total, 'f', 2, 64)
+		receipts[params["id"]] = receipt
+
+		// Send back new receipt
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(receipt)
+	}
+}
+
 func main() {
 	router := mux.NewRouter()
 	router.HandleFunc("/receipts/process", ProcessReceiptHandler).Methods(http.MethodPost)
 	router.HandleFunc("/receipts/{id}/points", CalculatePointsHandler).Methods(http.MethodGet)
+	router.HandleFunc("/receipts/{id}/add", AddItemsHandler).Methods(http.MethodPut)
 	log.Fatal(http.ListenAndServe(":8080", router))
 }
